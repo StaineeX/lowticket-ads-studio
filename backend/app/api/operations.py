@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 
-from backend.app.ai.ports import DeterministicAIProvider
+from backend.app.ai.factory import campaign_ai_provider
 from backend.app.ai.service import CampaignDraftRequest, CampaignService
 from backend.app.domain.campaigns import Platform
 from backend.app.providers.fake import FakeAdProvider
@@ -30,7 +30,7 @@ class ApprovalRequest(BaseModel):
 @router.post("/operations/preview")
 def preview_operation(request: OperationPreviewRequest) -> dict:
     draft_request = request.draft.model_copy(update={"platforms": [request.platform]})
-    draft = CampaignService(DeterministicAIProvider()).generate_draft(draft_request)
+    draft = CampaignService(campaign_ai_provider()).generate_draft(draft_request)
     provider = FakeAdProvider(request.platform)
     preview = manager.preview_operation(
         OperationRequest(request.platform, "create_campaign", draft),
