@@ -9,4 +9,5 @@ __pycache__/
 lowticket_ads.db
 frontend/node_modules/
 frontend/dist/
+*.tsbuildinfo
 .superpowers/sdd/
