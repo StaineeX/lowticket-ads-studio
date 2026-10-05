@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.config import settings
 from backend.app.api.metrics import router as metrics_router
 from backend.app.api.offers import router as offers_router
+from backend.app.api.campaigns import router as campaigns_router
 from backend.app.db import init_db
 
 
@@ -32,3 +33,4 @@ def health() -> dict[str, str]:
 
 app.include_router(offers_router)
 app.include_router(metrics_router)
+app.include_router(campaigns_router)
