@@ -7,6 +7,7 @@ from sqlalchemy.pool import StaticPool
 
 from backend.app.db import Base, get_db_session
 from backend.app.main import app
+from backend.app.models import MetricRow
 
 
 def test_create_and_list_offer_round_trip():
@@ -59,3 +60,36 @@ def test_metrics_import_rejects_unknown_platform():
     )
 
     assert response.status_code == 422
+
+
+def test_metrics_import_persists_valid_records():
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+    session_factory = sessionmaker(bind=engine)
+
+    def override_session():
+        with session_factory() as session:
+            yield session
+
+    app.dependency_overrides[get_db_session] = override_session
+    try:
+        response = TestClient(app).post(
+            "/api/metrics/import?platform=meta",
+            files={
+                "file": (
+                    "metrics.csv",
+                    b"Campaign ID,Date,Spend\n123,2026-10-01,12.50\n",
+                    "text/csv",
+                )
+            },
+        )
+
+        assert response.status_code == 200
+        with session_factory() as session:
+            assert session.query(MetricRow).count() == 1
+    finally:
+        app.dependency_overrides.clear()

@@ -15,9 +15,10 @@ async def import_metrics(
     file: UploadFile = File(...),
     session: Session = Depends(get_db_session),
 ) -> dict:
-    del session
     content = await file.read()
     result = MetricImporter().import_csv(content, platform)
+    session.add_all(record.to_row() for record in result.records)
+    session.commit()
     return {
         "imported": result.imported,
         "errors": [{"row": error.row, "message": error.message} for error in result.errors],
